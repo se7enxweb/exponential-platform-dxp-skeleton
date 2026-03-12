@@ -1,17 +1,19 @@
-# Ibexa Open Source skeleton
+# Exponential Platform DXP (Stable; Open Source) skeleton
 
-This is a website skeleton for Ibexa Open Source.
+This is a website skeleton for Exponential Platform DXP (Stable; Open Source).
 
 ## Installation
 
 Create a new project using composer:
     ```
-    composer create-project ibexa/oss-skeleton ibexa_website
+    composer create-project se7enxweb/exponential-platform-dxp-skeleton exponential_website
     ```
 
-Learn more about our commercial products - [Ibexa DXP](https://www.ibexa.co/products).
+Learn more about our open source products - [Exponential Platform DXP](https://platform.exponential.earth).
 
 ## COPYRIGHT
+Copyright (C) 1998 - 2026 7x. All rights reserved.
+
 Copyright (C) 1999-2025 Ibexa AS (formerly eZ Systems AS). All rights reserved.
 
 ## LICENSE

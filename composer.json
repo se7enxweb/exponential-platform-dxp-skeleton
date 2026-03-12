@@ -1,7 +1,7 @@
 {
-    "name": "ibexa/oss-skeleton",
+    "name": "se7enxweb/exponential-platform-dxp-skeleton",
     "type": "project",
-    "license": "(GPL-2.0-only or proprietary)",
-    "description": "A project package for installing Ibexa Open Source",
+    "license": "(GPL-2.0-or-later or proprietary)",
+    "description": "A project package for installing 7x Exponential Platform DXP (Stable; Open Source)",
     "require": {}
 }
