@@ -14,7 +14,7 @@
         "ext-xml": "*",
         "ext-intl": "*",
         "ext-mbstring": "*",
-        "nyholm/psr7": "^2.0",
+        "nyholm/psr7": "^1.0",
         "se7enxweb/exponential-platform-dxp": "dev-master",
         "symfony/flex": "^2",
         "symfony/runtime": "^7.3"
