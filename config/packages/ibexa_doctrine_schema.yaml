@@ -1,0 +1,14 @@
+parameters:
+    # MySQL/MariaDB only. For PostgreSQL remove or leave these as empty strings.
+    env(DATABASE_CHARSET): utf8mb4
+    env(DATABASE_COLLATION): utf8mb4_general_ci
+    database_charset: '%env(DATABASE_CHARSET)%'
+    database_collation: '%env(DATABASE_COLLATION)%'
+
+# Applies charset/collation to Ibexa-managed tables.
+# Comment out this entire block when using PostgreSQL.
+ibexa_doctrine_schema:
+    tables:
+        options:
+            charset: '%database_charset%'
+            collate: '%database_collation%'

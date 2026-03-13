@@ -1,0 +1,58 @@
+parameters:
+    locale_fallback: en
+
+    # Cache
+    env(CACHE_POOL): cache.tagaware.filesystem
+    env(CACHE_NAMESPACE): ibexa
+    cache_pool: '%env(CACHE_POOL)%'
+
+    # HTTP Cache
+    env(HTTPCACHE_PURGE_TYPE): local
+    env(HTTPCACHE_DEFAULT_TTL): '86400'
+    env(HTTPCACHE_PURGE_SERVER): 'http://localhost:80'
+    env(HTTPCACHE_VARNISH_INVALIDATE_TOKEN): ''
+    httpcache_default_ttl: '%env(int:HTTPCACHE_DEFAULT_TTL)%'
+    httpcache_purge_server: '%env(HTTPCACHE_PURGE_SERVER)%'
+    varnish_invalidate_token: '%env(resolve:default::HTTPCACHE_VARNISH_INVALIDATE_TOKEN)%'
+    purge_type: '%env(HTTPCACHE_PURGE_TYPE)%'
+
+    # Search engine: 'legacy' (built-in, no extra infra) or 'solr'
+    env(SEARCH_ENGINE): legacy
+    search_engine: '%env(SEARCH_ENGINE)%'
+
+ibexa:
+    http_cache:
+        purge_type: '%purge_type%'
+
+    repositories:
+        default:
+            storage: ~
+            search:
+                engine: '%search_engine%'
+                connection: default
+
+    # Siteaccess configuration.
+    # Customise siteaccess list, groups and matching rules in config/app/packages/ibexa_siteaccess.yaml.
+    # System settings, read in this order: `default` → siteaccess-group → siteaccess → `global`.
+    system:
+        default:
+            # Cache pool service, must be unique per repository in multi-repo setups.
+            cache_service_name: '%cache_pool%'
+            var_dir: var/site
+            content:
+                # Large TTL is safe because IbexaHttpCacheBundle expires affected cache on changes.
+                default_ttl: '%httpcache_default_ttl%'
+            http_cache:
+                purge_servers: ['%httpcache_purge_server%']
+                varnish_invalidate_token: '%varnish_invalidate_token%'
+
+    url_alias:
+        slug_converter:
+            transformation: urlalias_lowercase
+
+framework:
+    translator: { fallback: '%locale_fallback%' }
+    default_locale: '%locale_fallback%'
+    esi: true
+    fragments: true
+    http_method_override: true
