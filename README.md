@@ -3,7 +3,7 @@
 [![PHP](https://img.shields.io/badge/PHP-8.3%2B-8892BF?logo=php&logoColor=white)](https://php.net)
 [![Symfony](https://img.shields.io/badge/Symfony-7.3%2B-000000?logo=symfony&logoColor=white)](https://symfony.com)
 [![Platform](https://img.shields.io/badge/Platform-5.0%20OSS-orange)](https://github.com/se7enxweb)
-[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0)
+[![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 [![GitHub issues](https://img.shields.io/github/issues/se7enxweb/exponential-platform-dxp-skeleton)](https://github.com/se7enxweb/exponential-platform-dxp-skeleton/issues)
 [![GitHub stars](https://img.shields.io/github/stars/se7enxweb/exponential-platform-dxp-skeleton?style=social)](https://github.com/se7enxweb/exponential-platform-dxp-skeleton)
 
