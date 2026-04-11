@@ -152,7 +152,7 @@ Exponential Platform DXP is database, platform and browser independent. Because 
 
 ```bash
 # 1. Create project from the DXP skeleton
-composer create-project se7enxweb/exponential-platform-dxp-skeleton:dev-master \
+composer create-project se7enxweb/exponential-platform-dxp-skeleton \
     exponential_website
 cd exponential_website
 
@@ -231,7 +231,7 @@ See [INSTALL.md](INSTALL.md) for the complete step-by-step guide.
 ### Additional Capabilities in the v5 (Platform v5) Series
 
 - **Single-Kernel Architecture** — Exponential Platform v5 OSS runs on Symfony 7.4 LTS with no legacy bridge overhead
-- **GraphQL API** — auto-generated schema per content model via `ezplatform:graphql:generate-schema`
+- **GraphQL API** — auto-generated schema per content model via `ibexa:graphql:generate-schema`
 - **JWT Authentication** — REST API secured by RSA keypairs (`lexik/jwt-authentication-bundle`)
 - **Platform v5 Admin UI** — React-powered editorial interface at `/adminui/`
 - **Webpack Encore** — modern asset pipeline with HMR dev server and production minification
@@ -247,7 +247,7 @@ See [INSTALL.md](INSTALL.md) for the complete step-by-step guide.
 Create a new project using Composer:
 
 ```bash
-composer create-project se7enxweb/exponential-platform-dxp-skeleton:dev-master exponential_website
+composer create-project se7enxweb/exponential-platform-dxp-skeleton exponential_website
 ```
 
 The installation guide covers:
@@ -280,7 +280,7 @@ Learn more about our open source products — [Exponential Platform DXP](https:/
 
 A quick reference for the most frequently used Symfony, Platform v5, and Admin UI console commands.
 
-> **Command Prefix Convention:** Commands using the `exponential:` prefix below are the canonical name in this distribution. The old `ibexa:*` and `ezplatform:*` / `ezpublish:*` names work as deprecated aliases — they are fully functional but will be removed in a future major release. Commands still shown with an `ezplatform:` prefix have not yet been migrated and retain their legacy name in the current release.
+> **Command Prefix Convention:** Commands using the `exponential:` prefix are canonical in this distribution. The old `ibexa:*` name works as a deprecated alias for migrated commands. The `ezplatform:*` / `ezpublish:*` prefixes do **not** exist in Platform v5. Commands not yet migrated retain their `ibexa:*` name.
 
 ### Symfony Core
 
@@ -310,15 +310,15 @@ php bin/console doctrine:schema:validate                           # validate en
 
 ### Exponential Platform v5 (new stack)
 
-> **Command Prefix Convention:** `exponential:*` is canonical. `ibexa:*` and `ezplatform:*` are deprecated aliases that remain fully functional.
+> **Command Prefix Convention:** `exponential:*` is canonical. `ibexa:*` is a deprecated alias for migrated commands. The `ezplatform:*` prefix does **not** exist in Platform v5.
 
 ```bash
 php bin/console exponential:install exponential-oss           # fresh install with demo data
 php bin/console exponential:reindex                           # rebuild search index (full)
 php bin/console exponential:reindex --iteration-count=50      # incremental reindex
-php bin/console ezplatform:cron:run                           # run the Platform v5 cron scheduler (not yet migrated)
-php bin/console ezplatform:graphql:generate-schema            # regenerate GraphQL schema (not yet migrated)
-php bin/console ezplatform:solr:create-core --cores=default   # set up Solr core (not yet migrated)
+php bin/console ibexa:cron:run                                # run the Platform v5 cron scheduler
+php bin/console ibexa:graphql:generate-schema                 # regenerate GraphQL schema from content model
+# Solr: no console command in v5 — provision cores via Solr Admin HTTP API
 php bin/console bazinga:js-translation:dump public/assets --merge-domains   # JS i18n
 php bin/console fos:httpcache:invalidate:path / --all         # purge HTTP cache paths
 php bin/console lexik:jwt:generate-keypair                    # generate RSA keypair for REST API auth

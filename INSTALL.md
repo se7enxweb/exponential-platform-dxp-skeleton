@@ -1,4 +1,4 @@
-# Exponential Platform DXP v5 (Platform v5; Open Source; Starter Skelton)
+# Exponential Platform DXP v5 (Platform v5; Open Source; Starter Skeleton)
 ## Installation & Operations Guide
 
 > **Platform v5 DXP** is the standard single-kernel release of Exponential Platform DXP. It runs the **Exponential Platform v5 OSS** new-stack kernel on **Symfony 7.4 LTS** with **PHP 8.3+**.
@@ -17,7 +17,7 @@
 > |---|---|---|
 > | `exponential:*` | `ibexa:*` | `ezplatform:*` / `ezpublish:*` |
 >
-> Commands in this guide use `exponential:*` where the rename has been applied. Commands still shown with an `ezplatform:` prefix (e.g. `ezplatform:cron:run`, `ezplatform:graphql:generate-schema`) have not yet been migrated — they are fully functional as-is.
+> Commands in this guide use `exponential:*` where the rename has been applied. Commands not yet migrated retain their `ibexa:*` name (e.g. `ibexa:cron:run`, `ibexa:graphql:generate-schema`) — they are fully functional as-is. The `ezplatform:*` prefix does not exist in v5.
 
 ---
 
@@ -253,7 +253,7 @@ project-root/
 ### 3a. Composer create-project (recommended)
 
 ```bash
-composer create-project se7enxweb/exponential-platform-dxp-skeleton:dev-master \
+composer create-project se7enxweb/exponential-platform-dxp-skeleton \
     my-project
 cd my-project
 ```
@@ -331,7 +331,7 @@ php bin/console lexik:jwt:generate-keypair
 #### Step 8 — Generate GraphQL schema
 
 ```bash
-php bin/console ezplatform:graphql:generate-schema
+php bin/console ibexa:graphql:generate-schema
 ```
 
 #### Step 9 — Clear all caches
@@ -522,7 +522,7 @@ psql -U postgres -c "CREATE DATABASE exponential ENCODING 'UTF8';"
 php bin/console exponential:install exponential-oss
 # Deprecated aliases (still work):
 # php bin/console ibexa:install exponential-oss
-# php bin/console ezplatform:install exponential-oss
+# php bin/console ibexa:install exponential-oss
 ```
 
 The demo data creates an administrator user:
@@ -902,7 +902,7 @@ Back up `config/jwt/private.pem` and `config/jwt/public.pem` securely. If they a
 The GraphQL schema is auto-generated from the content type model. Regenerate it after any content type or field type changes:
 
 ```bash
-php bin/console ezplatform:graphql:generate-schema
+php bin/console ibexa:graphql:generate-schema
 ```
 
 Then clear the Symfony cache:
@@ -1155,7 +1155,7 @@ Add to crontab (`crontab -e -u www-data`):
 
 ```bash
 # Platform v5 cron runner (every 5 minutes)
-*/5 * * * * /usr/bin/php /var/www/exponential/bin/console ezplatform:cron:run --env=prod >> /var/log/exponential-cron.log 2>&1
+*/5 * * * * /usr/bin/php /var/www/exponential/bin/console ibexa:cron:run --env=prod >> /var/log/exponential-cron.log 2>&1
 ```
 
 ---
@@ -1166,9 +1166,9 @@ Add to crontab (`crontab -e -u www-data`):
 
 1. Set `SEARCH_ENGINE=solr` and `SOLR_DSN`/`SOLR_CORE` in `.env.local`
 2. Clear cache: `php bin/console cache:clear`
-3. Provision the Solr core:
+3. Provision the Solr core — use the Solr Admin HTTP API directly (no console command exists in v5):
    ```bash
-   php bin/console ezplatform:solr:create-core --cores=default
+   curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=default&configSet=exponential"
    ```
 4. Reindex all content:
    ```bash
@@ -1760,45 +1760,401 @@ php bin/console doctrine:database:create                          # create the d
 php bin/console doctrine:database:drop --force                    # drop the database (DESTRUCTIVE)
 ```
 
-### 22.3 Platform v5 New Stack
+### 22.3 Platform v5 — `exponential:` Commands
+
+All commands below are canonical `exponential:*` names introduced in Platform v5. For migrated commands, `ibexa:*` remains a deprecated alias. The `ezplatform:*` prefix does **not** exist in v5. Use `exponential:*` for all new scripts and documentation.
+
+---
+
+#### `exponential:install` — Initial database install
+
+Installs the Platform v5 schema and seed/demo data into an empty database. **Run once** on a fresh install; it will confirm before overwriting an existing schema.
 
 ```bash
-# ── Installation ───────────────────────────────────────────────────────────
-php bin/console exponential:install exponential-oss             # schema + demo data (Exponential OSS type)
-php bin/console exponential:install ibexa-oss                   # schema + demo data (upstream Ibexa OSS type)
-# Deprecated aliases — both types still work via them:
-# php bin/console ibexa:install exponential-oss
-# php bin/console ezplatform:install exponential-oss
+php bin/console exponential:install exponential-oss   # recommended — Exponential OSS seed data
+php bin/console exponential:install ibexa-oss         # upstream Ibexa OSS seed data (alternate)
+php bin/console exponential:install exponential-oss --skip-indexing   # skip post-install reindex
+php bin/console exponential:install exponential-oss --siteaccess=site # use specific siteaccess
+```
 
-# ── Search / Reindex ───────────────────────────────────────────────────────
-php bin/console exponential:reindex                         # full reindex
-php bin/console exponential:reindex --iteration-count=100   # incremental
-php bin/console exponential:reindex --content-type=article  # one content type
-php bin/console ezplatform:solr:create-core --cores=default  # provision Solr core (not yet migrated)
+| Option | Default | Description |
+|---|---|---|
+| `type` (arg) | `exponential-oss` | Install type: `exponential-oss` or `ibexa-oss` |
+| `--skip-indexing` | off | Skip the automatic `exponential:reindex` run after install |
+| `--siteaccess` | default | SiteAccess to use for seed-data operations |
 
-# ── Content Repository ─────────────────────────────────────────────────────
-php bin/console ezplatform:content:cleanup-drafts          # remove stale drafts (not yet migrated)
-php bin/console exponential:content:cleanup-versions --keep=3  # keep last N per content
+> **When to use:** Initial setup only. After install, use migrations for all schema changes.
+> **Deprecated alias:** `ibexa:install`
 
+---
+
+#### `exponential:reindex` — Rebuild search index
+
+Rebuilds or refreshes the search engine index (Solr or Legacy search). Run after bulk content imports, schema changes, or when search results feel stale.
+
+```bash
+php bin/console exponential:reindex                             # full reindex of all content
+php bin/console exponential:reindex --iteration-count=100      # process 100 content items per batch
+php bin/console exponential:reindex --content-ids=2,34,68      # reindex specific content IDs
+php bin/console exponential:reindex --content-type=article     # reindex one content type only
+php bin/console exponential:reindex --subtree=45               # reindex a Location subtree
+php bin/console exponential:reindex --since=yesterday          # reindex content modified since date
+php bin/console exponential:reindex --no-purge                 # skip purge before reindex
+php bin/console exponential:reindex --no-commit                # skip commit after reindex
+php bin/console exponential:reindex --processes=4              # parallelise across N processes
+php bin/console exponential:reindex --siteaccess=site          # use a specific siteaccess context
+# Run without memory limit in production:
+php -d memory_limit=-1 bin/console exponential:reindex --env=prod
+```
+
+> **When to use:** After `exponential:install`, after bulk content operations, after content type schema changes, after deploying to production, or during cron maintenance.
+> **Deprecated alias:** `ibexa:reindex`
+
+---
+
+#### `exponential:check-urls` — Audit external URL links
+
+Iterates over all content fields containing external URLs and checks whether each URL responds. Reports broken or unreachable links.
+
+```bash
+php bin/console exponential:check-urls                          # check all URLs (batches of 50)
+php bin/console exponential:check-urls --iteration-count=100   # process 100 URLs per batch
+php bin/console exponential:check-urls --user=editor           # run as a different platform user
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `-c, --iteration-count` | `50` | URLs checked per memory-safe batch |
+| `-u, --user` | `admin` | Platform username — needs `content: read, versionread` Role Policy |
+
+> **When to use:** Periodic maintenance (e.g. weekly cron) to surface broken outbound links before users encounter them.
+> **Deprecated alias:** `ibexa:check-urls`
+
+---
+
+#### `exponential:content:cleanup-versions` — Prune old content versions
+
+Removes archived and/or draft versions of content items, keeping only the published version and a configurable number of recent historic versions. Frees database space on high-edit sites.
+
+```bash
+php bin/console exponential:content:cleanup-versions              # remove all archived+draft (keep config default)
+php bin/console exponential:content:cleanup-versions --keep=3     # keep 3 most recent non-published versions
+php bin/console exponential:content:cleanup-versions --status=archived   # only archived, not drafts
+php bin/console exponential:content:cleanup-versions --status=draft      # only drafts
+php bin/console exponential:content:cleanup-versions --keep=1 --excluded-content-types=user,form
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `-t, --status` | `all` | Which versions to remove: `draft`, `archived`, `all` |
+| `-k, --keep` | config default | How many recent versions (per content item) to keep |
+| `-u, --user` | `admin` | Platform username — needs `content: remove, read, versionread` |
+| `--excluded-content-types` | `user` | Comma-separated identifiers to skip |
+
+> **When to use:** Scheduled maintenance cron (e.g. nightly) on sites with heavy editorial activity. Always test with `--keep=5` before using `--keep=1`.
+> **Deprecated alias:** `ibexa:content:cleanup-versions`
+
+---
+
+#### `exponential:copy-subtree` — Copy a Location subtree
+
+Copies an entire subtree of the content tree from one Location to another. Useful for duplicating site sections or seeding test fixtures.
+
+```bash
+php bin/console exponential:copy-subtree 42 2          # copy Location 42 under Location 2
+php bin/console exponential:copy-subtree 42 2 --user=admin
+```
+
+| Argument | Description |
+|---|---|
+| `source-location-id` | Location ID of the subtree root to copy |
+| `target-location-id` | Location ID of the destination parent |
+| `-u, --user` | Platform username — needs `content: create, read` |
+
+> **When to use:** One-off content structure duplication (staging → production seeding, site section copy). Not for bulk migrations — use Data Migration Bundle for that.
+> **Deprecated alias:** `ibexa:copy-subtree`
+
+---
+
+#### `exponential:debug:config-resolver` — Inspect SiteAccess config values
+
+Reads and prints resolved configuration values through the SiteAccess config resolver. Essential for debugging why a setting differs between siteaccesses.
+
+```bash
+php bin/console exponential:debug:config-resolver languages                       # resolved language list for default SA
+php bin/console exponential:debug:config-resolver languages --siteaccess=fr       # for the 'fr' siteaccess
+php bin/console exponential:debug:config-resolver http_cache.purge_servers        # cache purge server list
+php bin/console exponential:debug:config-resolver languages --json                # machine-readable output
+php bin/console exponential:debug:config-resolver languages --scope=fr            # alternative scope syntax
+php bin/console exponential:debug:config-resolver design --namespace=ibexa.site_access.config
+```
+
+| Option | Description |
+|---|---|
+| `parameter` (arg) | Config resolver parameter name, e.g. `languages`, `http_cache.purge_servers` |
+| `--json` | Output value only, single line JSON (for scripting/CI) |
+| `--scope` | Alternative to `--siteaccess` for specifying scope |
+| `--namespace` | Override namespace (default: `ibexa.site_access.config`) |
+| `--siteaccess` | SiteAccess to resolve against |
+
+> **Alias:** `exponential:debug:config`
+> **When to use:** Anytime a per-siteaccess config value is behaving unexpectedly. Faster than reading resolved config YAML by hand.
+> **Deprecated alias:** `ibexa:debug:config-resolver`
+
+---
+
+#### `exponential:delete-content-translation` — Delete a translation from a content item
+
+Permanently removes a specific language translation from **all versions** of a content item. Cannot be undone.
+
+```bash
+php bin/console exponential:delete-content-translation 123 fre-FR   # delete French from content ID 123
+php bin/console exponential:delete-content-translation 456 ger-DE --user=admin
+```
+
+| Argument | Description |
+|---|---|
+| `content-id` | Database ID of the Content object |
+| `language-code` | Language code to remove, e.g. `fre-FR`, `ger-DE`, `pol-PL` |
+| `-u, --user` | Needs `content: read, versionread, edit, remove, versionremove` |
+
+> **When to use:** After discontinuing a language on a site and needing to clean up orphaned translations. Take a DB backup first.
+> **Deprecated alias:** `ibexa:delete-content-translation`
+
+---
+
+#### `exponential:user:expire-password` — Force password expiry
+
+Marks user passwords as expired so they are prompted to change at next login. Used to enforce a password rotation policy.
+
+```bash
+php bin/console exponential:user:expire-password --force                    # expire all users (dry-run without --force)
+php bin/console exponential:user:expire-password --user-id=12 --force       # expire one specific user
+php bin/console exponential:user:expire-password --user-id=12 --user-id=34 --force
+php bin/console exponential:user:expire-password --iteration-count=200 --force   # process 200 per batch
+php bin/console exponential:user:expire-password --password-ttl=60 --force       # set 60-day TTL on content type
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `-u, --user-id` | all users | Specific User ID(s) to expire (repeatable) |
+| `-f, --force` | off | Required to actually apply; without it, runs as dry-run |
+| `-c, --iteration-count` | `50` | Users processed per batch |
+| `-t, --password-ttl` | `90` | Days until password expires (also updates the content type) |
+
+> **When to use:** After a security incident requiring forced password rotation, or when introducing a password TTL policy for the first time.
+> **Deprecated alias:** `ibexa:user:expire-password`
+
+---
+
+#### `exponential:user:validate-password-hashes` — Audit password hash algorithms
+
+Checks all user records and reports whether their stored password hashes use the currently configured (and therefore still secure) hashing algorithm. Flags any using deprecated algorithms.
+
+```bash
+php bin/console exponential:user:validate-password-hashes
+php bin/console exponential:user:validate-password-hashes -v    # verbose — list every user checked
+```
+
+> **When to use:** After upgrading Platform or changing the `password_hash_type` config. Run before forcing a password expiry so you know the scope of accounts using outdated hash algorithms.
+> **Deprecated alias:** `ibexa:user:validate-password-hashes`
+
+---
+
+#### `exponential:images:normalize-paths` — Fix image field storage paths
+
+Corrects stored image file paths in the database to match the canonical hash-based path scheme. Required when migrating image storage or after importing content from older Platform versions that used flat paths.
+
+```bash
+php bin/console exponential:images:normalize-paths              # normalize all paths (with hashing)
+php bin/console exponential:images:normalize-paths --no-hash    # normalize without renaming filenames to hashes
+```
+
+| Option | Description |
+|---|---|
+| `--no-hash` | Skip filename hashing — only fix directory structure |
+
+> **When to use:** After a file storage migration (e.g. local → S3/DFS) or when image URLs in content are returning 404 due to path inconsistencies.
+> **Deprecated alias:** `ibexa:images:normalize-paths`
+
+---
+
+#### `exponential:images:resize-original` — Batch-resize stored original images
+
+Applies a named Liip Imagine filter to the **original** stored image files for a given content type / image field combination. Useful when a new image size policy requires retroactively processing previously uploaded originals.
+
+```bash
+# Resize all 'image' fields on 'banner' content type using the 'large' imagine filter:
+php bin/console exponential:images:resize-original image banner --filter=large
+
+# Process 10 images per batch (low memory environments):
+php bin/console exponential:images:resize-original image banner --filter=large --iteration-count=10
+```
+
+| Argument / Option | Default | Description |
+|---|---|---|
+| `imageFieldIdentifier` (arg) | — | Field identifier of type `ibexa_image` |
+| `contentTypeIdentifier` (arg) | — | Content type identifier |
+| `-f, --filter` | required | Liip Imagine filter alias to apply |
+| `-i, --iteration-count` | `25` | Images processed per memory-safe batch |
+| `-u, --user` | `admin` | Needs `content: read, versionread, edit, publish` |
+
+> **When to use:** When retroactively applying a new image policy (crop, max-width) to existing uploaded content. Run during off-peak hours — it is CPU/IO intensive.
+> **Deprecated alias:** `ibexa:images:resize-original`
+
+---
+
+#### `exponential:urls:regenerate-aliases` — Rebuild URL aliases
+
+Regenerates all autogenerated Location URL aliases from the current content URL pattern configuration. Also cleans up stale custom Location and global aliases from Legacy Storage.
+
+```bash
+php bin/console exponential:urls:regenerate-aliases                          # regenerate all (interactive confirm)
+php bin/console exponential:urls:regenerate-aliases --force --no-interaction # non-interactive (cron/deploy safe)
+php bin/console exponential:urls:regenerate-aliases --iteration-count=500    # 500 Locations per batch
+php bin/console exponential:urls:regenerate-aliases --location-id=42         # one subtree root only
+php bin/console exponential:urls:regenerate-aliases --location-id=42 --location-id=100
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `-c, --iteration-count` | `1000` | Locations fetched and processed per batch |
+| `--location-id` | all | Only regenerate aliases for specific Location IDs (repeatable) |
+| `-f, --force` | off | Skip interactive confirmation (required with `--no-interaction`) |
+
+> **When to use:** After changing URL name patterns in content type configuration, after a multilingual site migration, or when URL aliases are missing or duplicated.
+> **Deprecated alias:** `ibexa:urls:regenerate-aliases`
+
+---
+
+#### `exponential:content-type-group:set-system` — Mark a content type group as system
+
+Flags a Content Type Group as a system group (or unflags it). System groups are hidden from editors in the Admin UI, keeping the editorial interface clean.
+
+```bash
+php bin/console exponential:content-type-group:set-system Media --system       # mark as system group
+php bin/console exponential:content-type-group:set-system Media --no-system    # unmark as system group
+```
+
+| Argument / Option | Description |
+|---|---|
+| `content-type-group-identifier` (arg) | Identifier of the Content Type Group |
+| `--system` / `--no-system` | Set or unset the system flag |
+| `-u, --user` | Platform username — needs `content: remove, read, versionread` |
+
+> **When to use:** When adding a new internal content type group (e.g. `ConfigObjects`, `SystemPages`) that editors should not see or be able to modify in the Admin UI.
+> **Deprecated alias:** `ibexa:content-type-group:set-system`
+
+---
+
+#### `exponential:timestamps:to-utc` — Convert date/datetime field values to UTC
+
+Converts stored `ibexa_date` and `ibexa_datetime` field values from a source timezone to UTC. **One-time data migration** command for sites that were originally installed without UTC-enforced storage.
+
+```bash
+# Dry run first — always:
+php bin/console exponential:timestamps:to-utc Europe/London --dry-run
+
+# Convert all date and datetime fields from Europe/London to UTC:
+php bin/console exponential:timestamps:to-utc Europe/London
+
+# Convert only datetime fields in batches of 200, records from 2020 onwards:
+php bin/console exponential:timestamps:to-utc Europe/London --mode=datetime --iteration-count=200 --from=2020-01-01
+```
+
+| Argument / Option | Default | Description |
+|---|---|---|
+| `timezone` (arg) | required | Source timezone, e.g. `Europe/London`, `America/New_York` |
+| `--dry-run` | off | Preview only — no DB changes |
+| `--mode` | `all` | Scope: `date`, `datetime`, or `all` |
+| `--from` | — | Only process versions after this date |
+| `--to` | — | Only process versions before this date |
+| `--offset` | `0` | Record offset (resumes an interrupted run) |
+| `--iteration-count` | `100` | Records updated per iteration |
+
+> **When to use:** Only on legacy data migrations where the original install was timezone-unaware. Always take a full DB backup and run `--dry-run` first.
+> **Deprecated alias:** `ibexa:timestamps:to-utc`
+
+---
+
+#### `exponential:content:remove-duplicate-fields` — Remove duplicate content fields
+
+Removes duplicate field rows created by a known storage layer bug (IBX-5388). Safe to run on any installation — it only deletes verified duplicates, not legitimate data.
+
+```bash
+php bin/console exponential:content:remove-duplicate-fields                          # remove all duplicates
+php bin/console exponential:content:remove-duplicate-fields --batch-size=5000        # smaller batches (less lock time)
+php bin/console exponential:content:remove-duplicate-fields --max-iterations=10      # run only N batches then exit
+php bin/console exponential:content:remove-duplicate-fields --batch-size=1000 --sleep=200  # sleep 200ms between batches
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `-b, --batch-size` | `10000` | Number of field attribute rows processed per iteration |
+| `-i, --max-iterations` | `-1` (unlimited) | Stop after this many iterations |
+| `-s, --sleep` | `0` | Milliseconds to sleep between iterations (reduces DB pressure) |
+
+> **When to use:** Run once after upgrading from a version affected by IBX-5388, or if admin queries are returning duplicated field values. Use `--sleep` and `--batch-size` on live production to spread load.
+> **Deprecated alias:** `ibexa:content:remove-duplicate-fields`
+
+---
+
+#### `exponential:io:migrate-files` — Migrate binary files between IO handlers
+
+Migrates stored binary files (images, PDFs, media) from one IO repository handler to another. Used when switching file storage backends (e.g. local filesystem → AWS S3 / DFS / NFS).
+
+```bash
+# List all configured IO handlers:
+php bin/console exponential:io:migrate-files --list-io-handlers
+
+# Dry run — check what would be moved:
+php bin/console exponential:io:migrate-files --from=default_metadata,default_binarydata --to=dfs_metadata,dfs_binarydata --dry-run
+
+# Live migration in batches of 50:
+php bin/console exponential:io:migrate-files --from=default_metadata,default_binarydata --to=dfs_metadata,dfs_binarydata --bulk-count=50
+```
+
+| Option | Default | Description |
+|---|---|---|
+| `--from` | required | Source: `<metadata_handler>,<binarydata_handler>` |
+| `--to` | required | Destination: `<metadata_handler>,<binarydata_handler>` |
+| `--list-io-handlers` | — | Print all available handler identifiers and exit |
+| `--bulk-count` | `100` | Files processed per batch |
+| `--dry-run` | off | Preview only — no files moved |
+
+> **When to use:** When migrating file storage infrastructure (local → S3/DFS/NFS). Always run `--dry-run` first and take a storage backup. Run `exponential:reindex` after migration to update search index references.
+> **Deprecated alias:** `ibexa:io:migrate-files`
+
+---
+
+#### Other Platform commands (not yet migrated to `exponential:` prefix)
+
+The following commands remain under legacy prefixes. They are fully functional — the rename has not been applied to them yet:
+
+```bash
 # ── Cron ───────────────────────────────────────────────────────────────────
-php bin/console ezplatform:cron:run                        # run Platform v5 cron scheduler (not yet migrated)
-php bin/console ezplatform:cron:run --quiet                # suppress output (use in crontab)
+php bin/console ibexa:cron:run                             # run Platform v5 cron scheduler
+php bin/console ibexa:cron:run --quiet                     # suppress output (for crontab)
 
-# ── GraphQL ────────────────────────────────────────────────────────────────
-php bin/console ezplatform:graphql:generate-schema         # regenerate from content model (not yet migrated)
+# ── GraphQL schema ─────────────────────────────────────────────────────────
+php bin/console ibexa:graphql:generate-schema              # regenerate GraphQL schema from content model
+
+# ── Solr (when using Solr search engine) ────────────────────────────────────
+# No console command exists in v5 — provision cores via Solr Admin HTTP API:
+# curl "http://localhost:8983/solr/admin/cores?action=CREATE&name=default&configSet=exponential"
 
 # ── HTTP Cache ─────────────────────────────────────────────────────────────
 php bin/console fos:httpcache:invalidate:path / --all      # purge all HTTP cache paths
 php bin/console fos:httpcache:invalidate:tag <tag>         # purge by cache tag
 
-# ── JS Translations (Admin UI i18n) ────────────────────────────────────────
+# ── Admin UI JS Translations ───────────────────────────────────────────────
 php bin/console bazinga:js-translation:dump public/assets --merge-domains
 
-# ── Image Variations ───────────────────────────────────────────────────────
+# ── Image Variation Cache ──────────────────────────────────────────────────
 php bin/console liip:imagine:cache:remove                  # remove all cached variations
-php bin/console liip:imagine:cache:remove --filter=small   # remove one variation alias
+php bin/console liip:imagine:cache:remove --filter=small   # remove one variation filter alias
 
-# ── Config Inspection ──────────────────────────────────────────────────────
+# ── Config Dump ────────────────────────────────────────────────────────────
 php bin/console debug:config ibexa                         # dump full resolved platform config
 ```
 
