@@ -1,13 +1,15 @@
 name: Call Create Release for tag Workflow
 
-# Creates the GitHub release for a pushed tag when none exists yet (an
-# existing release is never edited). On demand: the notes for any tag,
-# with dry-run to only print them.
+# Creates the GitHub release for a pushed tag when none exists yet, with
+# notes from the history since the previous tag. An existing release is never
+# edited. On demand: the notes for any tag (dry-run only prints them).
 
 on:
   push:
     tags:
       - 'v*'
+      - '[0-9]*'
+      - '!v*-alpha*'
   workflow_dispatch:
     inputs:
       tag:
