@@ -57,6 +57,9 @@
             "cache:clear": "symfony-cmd",
             "assets:install --symlink --relative %PUBLIC_DIR%": "symfony-cmd"
         },
+        "post-create-project-cmd": [
+            "@php bin/add-netgen-layouts"
+        ],
         "post-install-cmd": [
             "@auto-scripts"
         ],

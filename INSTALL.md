@@ -265,6 +265,21 @@ Composer will:
 3. Execute `post-install-cmd` scripts:
    - `assets:install` — publishes bundle `public/` assets to `public/bundles/`
    - `cache:clear` — warms up the initial cache
+4. Run `post-create-project-cmd`: `php bin/add-netgen-layouts` (see [Netgen Layouts](#netgen-layouts) below)
+
+#### Netgen Layouts
+
+Netgen Layouts 2 (`se7enxweb/layouts-core` 2.0) needs **PHP 8.4 or later**; the platform itself runs on PHP 8.3.
+`se7enxweb/exponential-platform-dxp` therefore does not require it. Instead, `composer create-project` runs
+`php bin/add-netgen-layouts`:
+
+- on **PHP 8.4 and later** it runs `composer require se7enxweb/layouts-core:2.0.x-dev`, so Layouts is part of the
+  project by default (Symfony Flex registers its bundles);
+- on **PHP 8.3** it adds nothing and says so; the project is complete without Layouts.
+
+To create a project without Layouts on PHP 8.4+ as well, set `EXP_WITHOUT_NETGEN_LAYOUTS=1` for `composer
+create-project`. To add Layouts later (after moving to PHP 8.4+), run `php bin/add-netgen-layouts` in the project.
+If the script cannot add it, the project stays complete without it and the message says how to retry.
 
 > 💾 **Git Save Point 1 — Project created**
 > ```bash

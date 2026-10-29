@@ -1,0 +1,53 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Adds Netgen Layouts to a new project on PHP 8.4 or later (Composer's post-create-project-cmd).
+ *
+ * Netgen Layouts 2 (se7enxweb/layouts-core 2.0) and its Content Browser need PHP 8.4. The platform itself runs
+ * on PHP 8.3, so se7enxweb/exponential-platform-dxp does not require Layouts: on PHP 8.4 and later this script
+ * adds it right after `composer create-project`, so Layouts is there by default; on PHP 8.3 the project installs
+ * without it. Symfony Flex registers the bundles of the added packages.
+ *
+ *   php bin/add-netgen-layouts            run by composer create-project; safe to run again later
+ *   EXP_WITHOUT_NETGEN_LAYOUTS=1          create the project without Netgen Layouts on PHP 8.4+ too
+ *
+ * A failure here never fails the project: it stays a complete installation without Netgen Layouts, and the
+ * message says how to add it by hand (INSTALL.md, "Netgen Layouts").
+ */
+
+$packages = ['se7enxweb/layouts-core:2.0.x-dev'];
+$root = dirname(__DIR__);
+
+if (getenv('EXP_WITHOUT_NETGEN_LAYOUTS')) {
+    fwrite(STDOUT, "Netgen Layouts: not added (EXP_WITHOUT_NETGEN_LAYOUTS is set).\n");
+    exit(0);
+}
+if (PHP_VERSION_ID < 80400) {
+    fwrite(STDOUT, 'Netgen Layouts: not added. It needs PHP 8.4 or later, this is PHP ' . PHP_VERSION . ".\n"
+        . "  The project works without it. On PHP 8.4+ add it later with: php bin/add-netgen-layouts\n");
+    exit(0);
+}
+$installed = $root . '/vendor/composer/installed.json';
+if (is_file($installed) && str_contains((string) file_get_contents($installed), '"name": "se7enxweb/layouts-core"')) {
+    fwrite(STDOUT, "Netgen Layouts: already installed.\n");
+    exit(0);
+}
+
+$composer = getenv('COMPOSER_BINARY') ?: 'composer';
+$args = array_merge(['require', '--no-interaction', '--update-with-dependencies'], $packages);
+if (str_ends_with($composer, '.phar') || is_file($composer)) {
+    $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($composer);
+} else {
+    $command = escapeshellarg($composer);
+}
+$command .= ' ' . implode(' ', array_map('escapeshellarg', $args));
+
+fwrite(STDOUT, 'Netgen Layouts: adding it for PHP ' . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION . ".\n");
+passthru('cd ' . escapeshellarg($root) . ' && ' . $command, $code);
+if ($code !== 0) {
+    fwrite(STDERR, "Netgen Layouts: could not be added; the project is complete without it.\n"
+        . "  To add it later: php bin/add-netgen-layouts (see INSTALL.md, \"Netgen Layouts\").\n");
+    exit(0);
+}
+fwrite(STDOUT, "Netgen Layouts: added.\n");
+exit(0);
