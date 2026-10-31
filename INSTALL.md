@@ -265,11 +265,11 @@ Composer will:
 3. Execute `post-install-cmd` scripts:
    - `assets:install` — publishes bundle `public/` assets to `public/bundles/`
    - `cache:clear` — warms up the initial cache
-4. Run `post-create-project-cmd`: `php bin/add-netgen-layouts` (see [Netgen Layouts](#netgen-layouts) below)
+4. Run `post-create-project-cmd`: `php bin/add-netgen-layouts` (see [Exponential Layouts](#exponential-layouts) below)
 
-#### Netgen Layouts
+#### Exponential Layouts
 
-Netgen Layouts 2 (`se7enxweb/layouts-core` 2.0) needs **PHP 8.4 or later**; the platform itself runs on PHP 8.3.
+Exponential Layouts 2 (`se7enxweb/layouts-core` 2.0) needs **PHP 8.4 or later**; the platform itself runs on PHP 8.3.
 `se7enxweb/exponential-platform-dxp` therefore does not require it. Instead, `composer create-project` runs
 `php bin/add-netgen-layouts`:
 
